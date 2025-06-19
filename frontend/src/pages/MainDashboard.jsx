@@ -91,7 +91,7 @@ const MainDashboard = () => {
 
   const fetchSubjects = async (token) => {
     try {
-      const response = await fetch("http://localhost:5000/api/subjects", {
+      const response = await fetch("https://questionai-backend.onrender.com/api/subjects", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -112,7 +112,7 @@ const MainDashboard = () => {
   const fetchQuestionPapers = async (token) => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/question-papers",
+        "https://questionai-backend.onrender.com/api/question-papers",
         {
           headers: {
             Authorization: `Bearer ${token}`,

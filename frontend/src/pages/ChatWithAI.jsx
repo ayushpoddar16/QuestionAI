@@ -130,7 +130,7 @@ const ChatWithAI = ({ isOpen, onClose, context = null }) => {
       // Prepare conversation history
       const conversationHistory = prepareConversationHistory();
       
-      const response = await fetch("http://localhost:5000/api/chat/ask", {
+      const response = await fetch("https://questionai-backend.onrender.com/api/chat/ask", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
