@@ -68,56 +68,56 @@ const Login = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!validateForm()) return;
+    if (!validateForm()) return;
 
-        setLoading(true);
-        setMessage({ type: '', text: '' });
+    setLoading(true);
+    setMessage({ type: '', text: '' });
 
-        try {
-            const response = await fetch('https://questionai-backend.onrender.com/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(form),
-            });
+    try {
+        const response = await fetch('https://questionai-backend.onrender.com/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(form),
+        });
 
-            if (response.ok) {
-                const data = await response.json();
+        if (response.ok) {
+            const data = await response.json();
 
-                console.log('Login successful! Response data:', data);
-                console.log('Token received:', data.token);
+            console.log('Login successful! Response data:', data);
+            console.log('Token received:', data.token);
 
-                setMessage({ type: 'success', text: 'Login successful!' });
+            setMessage({ type: 'success', text: 'Login successful!' });
 
-                // Store the token and user data in localStorage
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
+            // Store the token and user data in localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
 
-                // Always redirect to text-extractor by default
-                setTimeout(() => {
-                    window.location.href = "/dashboard";
-                }, 1500);
-            } else {
-                const errorData = await response.json();
-                console.error('Login failed. Error data:', errorData);
-                setMessage({
-                    type: 'error',
-                    text: errorData.message || 'Login failed. Please check your credentials.'
-                });
-            }
-        } catch (err) {
-            console.error('Login network error:', err);
+            // Always redirect to text-extractor by default
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 1500);
+        } else {
+            const errorData = await response.json();
+            console.error('Login failed. Error data:', errorData);
             setMessage({
                 type: 'error',
-                text: 'Network error. Please check your connection and try again.'
+                text: errorData.message || 'Login failed. Please check your credentials.'
             });
-        } finally {
-            setLoading(false);
         }
-    };
+    } catch (err) {
+        console.error('Login network error:', err);
+        setMessage({
+            type: 'error',
+            text: 'Network error. Please check your connection and try again.'
+        });
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative">

@@ -22,8 +22,17 @@ const corsOptions = {
     'https://questionai-ayush.onrender.com'
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ]
 };
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
