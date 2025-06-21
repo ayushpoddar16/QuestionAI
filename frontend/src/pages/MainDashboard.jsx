@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Upload,
@@ -55,14 +54,16 @@ const MainDashboard = () => {
     // Get all papers of this subject
     const subjectPapers = subjectGroup.papers;
 
-    // Combine all extracted text from papers of this subject
+    // Combine all extracted text from papers of this subject with uploader info
     const combinedText = subjectPapers
       .filter((p) => p.extractedText && p.extractedText.trim())
       .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Sort by upload date
       .map((p, index) => {
-        return p.extractedText.trim();
+        const uploaderInfo = `Uploaded by: ${p.uploadedBy?.name || 'Unknown'} | Year: ${p.year} | Date: ${new Date(p.uploadedAt).toLocaleDateString()}`;
+        const separator = "─".repeat(80);
+        return `${separator}\n${uploaderInfo}\n${separator}\n\n${p.extractedText.trim()}`;
       })
-      .join("\n\n" + "─".repeat(60) + "\n\n");
+      .join("\n\n");
 
     // Create a combined paper object
     const combinedPaper = {
@@ -76,6 +77,13 @@ const MainDashboard = () => {
       ).length,
       totalPapers: subjectPapers.length,
       availableYears: Array.from(subjectGroup.availableYears).sort(),
+      papersWithUploaders: subjectPapers.filter(
+        (p) => p.extractedText && p.extractedText.trim()
+      ).map(p => ({
+        uploadedBy: p.uploadedBy?.name || 'Unknown',
+        year: p.year,
+        uploadedAt: p.uploadedAt
+      }))
     };
 
     setSelectedPaper(combinedPaper);
@@ -327,7 +335,7 @@ const MainDashboard = () => {
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
             >
               <FileText className="w-5 h-5" />
-              <span>Start Text Extraction</span>
+              <span>Upload Question paper </span>
             </button>
           </div>
 
@@ -525,6 +533,13 @@ const MainDashboard = () => {
                     </span>
                   )}
                 </div>
+                {/* Display contributor information */}
+                {selectedPaper.papersWithUploaders && selectedPaper.papersWithUploaders.length > 0 && (
+                  <div className="mt-2 text-sm text-blue-700">
+                    <span className="font-medium">Contributors: </span>
+                    {[...new Set(selectedPaper.papersWithUploaders.map(p => p.uploadedBy))].join(", ")}
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleCloseModal}
@@ -595,8 +610,7 @@ const MainDashboard = () => {
                       <p className="text-sm text-blue-800">
                         <strong>Note:</strong> This view combines extracted text
                         from all available papers for{" "}
-                        {selectedPaper.subject?.code}. Questions from different
-                        papers are separated by divider lines for better
+                        {selectedPaper.subject?.code}. Each paper section shows the uploader's name, year, and upload date at the top, followed by divider lines for better
                         readability.
                       </p>
                     </div>

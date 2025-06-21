@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Upload, // Although Upload isn't directly used as an icon, it's good to keep if it was meant for future use
@@ -45,18 +45,18 @@ const TextExtractor = () => {
   const [recentlyUsedSubjectIds, setRecentlyUsedSubjectIds] = useState([]);
   const extractedTextRef = useRef(null);
   // 3. Add this useEffect to handle auto-scrolling when extractedText changes
-useEffect(() => {
-  if (extractedText && extractedTextRef.current) {
-    // Small delay to ensure the component has fully rendered
-    setTimeout(() => {
-      extractedTextRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
-      });
-    }, 100);
-  }
-}, [extractedText]);
+  useEffect(() => {
+    if (extractedText && extractedTextRef.current) {
+      // Small delay to ensure the component has fully rendered
+      setTimeout(() => {
+        extractedTextRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      }, 100);
+    }
+  }, [extractedText]);
 
   // --- Fetch User Data and Subjects on Component Mount ---
   useEffect(() => {
@@ -214,6 +214,24 @@ useEffect(() => {
     }
   };
 
+  // 1. Add this new function after your existing functions (around line 200-250):
+
+  const cancelExtractedText = () => {
+    setExtractedText("");
+    setEditableText("");
+    setIsEditing(false);
+    setUploadTitle("");
+    setUploadYear("");
+    setUploadExamType("");
+    setSelectedSubjectId("");
+    setSaveErrors({});
+    setMessage({
+      type: "success",
+      text: "Extracted text cleared. You can upload a new file.",
+    });
+    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+  };
+
   const handleExtractText = async () => {
     if (!selectedFile) {
       setMessage({ type: "error", text: "Please select a file first." });
@@ -245,18 +263,22 @@ useEffect(() => {
         return;
       }
 
-      const response = await fetch("https://questionai-backend.onrender.com/api/extract-text", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "https://questionai-backend.onrender.com/api/extract-text",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const text = data.extractedText || "No text could be extracted from this file.";
+        const text =
+          data.extractedText || "No text could be extracted from this file.";
         setExtractedText(text);
         // NEW: Initialize editable text with extracted text
         setEditableText(text);
@@ -492,7 +514,8 @@ useEffect(() => {
           onClick={() => (window.location.href = "/dashboard")}
           className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> {/* Assuming ArrowLeft is imported */}
+          <ArrowLeft className="w-4 h-4" />{" "}
+          {/* Assuming ArrowLeft is imported */}
           <span className="text-md">Back to dashboard</span>
         </button>
         <div className="flex items-center gap-3">
@@ -566,16 +589,20 @@ useEffect(() => {
           )}
         </div>
 
-
         {/* Extracted Text Results */}
         {extractedText && (
-          <div ref={extractedTextRef} className="bg-blue-100 backdrop-blur-lg rounded-2xl border border-gray-200 p-8 sm:p-10 shadow-xl shadow-gray-200/50 animate-slideUp">
+          <div
+            ref={extractedTextRef}
+            className="bg-blue-200 backdrop-blur-lg rounded-2xl border border-gray-200 p-8 sm:p-10 shadow-xl shadow-gray-200/50 animate-slideUp"
+          >
             <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
               <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-blue-500 bg-clip-text text-transparent">
                 Extracted Text
               </h3>
               <div className="flex gap-3">
-                {/* NEW: Edit button */}
+
+
+                {/* Edit button */}
                 {!isEditing && (
                   <button
                     onClick={startEditing}
@@ -585,6 +612,7 @@ useEffect(() => {
                     Edit
                   </button>
                 )}
+
                 <button
                   onClick={copyToClipboard}
                   className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
@@ -592,12 +620,22 @@ useEffect(() => {
                   <Copy className="w-4 h-4" />
                   Copy
                 </button>
+
                 <button
                   onClick={downloadText}
                   className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
                 >
                   <Download className="w-4 h-4" />
                   Download
+                </button>
+
+                {/* NEW: Cancel button - shows first */}
+                <button
+                  onClick={cancelExtractedText}
+                  className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
                 </button>
               </div>
             </div>
@@ -606,7 +644,9 @@ useEffect(() => {
             {isEditing ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600">Edit the extracted text below:</p>
+                  <p className="text-sm text-gray-600">
+                    Edit the extracted text below:
+                  </p>
                   <div className="flex gap-2">
                     <button
                       onClick={saveEdits}
@@ -650,7 +690,7 @@ useEffect(() => {
                   <label
                     htmlFor="selectedSubjectId"
                     className="block text-gray-700 text-sm font-medium mb-2 py-2"
-                    >
+                  >
                     Subject
                   </label>
                   <div className="relative">
@@ -674,7 +714,7 @@ useEffect(() => {
                           key={subject._id}
                           value={subject._id}
                           className="bg-white text-gray-800"
-                          >
+                        >
                           {subject.name} ({subject.code})
                         </option>
                       ))}
@@ -692,7 +732,7 @@ useEffect(() => {
                           strokeLinejoin="round"
                           strokeWidth={2}
                           d="M19 9l-7 7-7-7"
-                          />
+                        />
                       </svg>
                     </div>
                     {saveErrors.selectedSubjectId && (
@@ -725,7 +765,7 @@ useEffect(() => {
                   ) : (
                     <>
                       <Save className="w-6 h-6" />
-                      Export the text
+                      Upload Question Paper
                     </>
                   )}
                 </button>
@@ -737,7 +777,7 @@ useEffect(() => {
               </div>
             </div>
             {/* --- END Save Extracted Text Form --- */}
-            
+
             {/* Messages (consolidated) */}
             {message.text && (
               <div
