@@ -159,11 +159,12 @@ const MainDashboard = () => {
     setShowChatModal(true);
   };
 
-  // Add this function to handle chat with specific subject context
+   // Add this function to handle chat with specific subject context
   const handleChatWithSubject = (subjectGroup) => {
-    // Prepare context from the subject's question papers
+    // Prepare context from the subject's question papers with the same sorting as handleViewDetails
     const subjectContext = subjectGroup.papers
       .filter((p) => p.extractedText && p.extractedText.trim())
+      .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Sort by upload date (oldest first) - same as handleViewDetails
       .map((p) => p.extractedText.trim())
       .join("\n\n--- Question Paper ---\n\n");
 
