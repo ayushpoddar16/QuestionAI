@@ -159,19 +159,24 @@ const MainDashboard = () => {
     setShowChatModal(true);
   };
 
-   // Add this function to handle chat with specific subject context
-  const handleChatWithSubject = (subjectGroup) => {
-    // Prepare context from the subject's question papers with the same sorting as handleViewDetails
-    const subjectContext = subjectGroup.papers
-      .filter((p) => p.extractedText && p.extractedText.trim())
-      .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Sort by upload date (oldest first) - same as handleViewDetails
-      .map((p) => p.extractedText.trim())
-      .join("\n\n--- Question Paper ---\n\n");
+// Replace your handleChatWithSubject function with this optimized version:
+const handleChatWithSubject = (subjectGroup) => {
+  // Prepare context with same order as handleViewDetails but lighter formatting
+  const subjectContext = subjectGroup.papers
+    .filter((p) => p.extractedText && p.extractedText.trim())
+    .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Same sorting as handleViewDetails
+    .map((p, index) => {
+      // Show upload date instead of just year
+      const uploadDate = new Date(p.uploadedAt).toLocaleDateString();
+      const paperInfo = `Paper ${index + 1} (${uploadDate} - ${p.uploadedBy?.name || 'Unknown'})`;
+      return `=== ${paperInfo} ===\n${p.extractedText.trim()}`;
+    })
+    .join("\n\n");
 
-    const contextWithSubject = `Subject: ${subjectGroup.subject?.code} - ${subjectGroup.subject?.name}\n\n${subjectContext}`;
+  const contextWithSubject = `Subject: ${subjectGroup.subject?.code} - ${subjectGroup.subject?.name}\n\n${subjectContext}`;
 
-    handleChatWithAI(contextWithSubject);
-  };
+  handleChatWithAI(contextWithSubject);
+};
 
   // Group all papers by subject first - with null subject handling
   const allGroupedPapers = questionPapers.reduce((groups, paper) => {
