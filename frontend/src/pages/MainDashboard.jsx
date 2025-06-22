@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Search,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import ChatWithAI from "./ChatWithAI";
 
@@ -54,36 +55,28 @@ const MainDashboard = () => {
     // Get all papers of this subject
     const subjectPapers = subjectGroup.papers;
 
-    // Combine all extracted text from papers of this subject with uploader info
-    const combinedText = subjectPapers
-      .filter((p) => p.extractedText && p.extractedText.trim())
-      .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Sort by upload date
-      .map((p, index) => {
-        const uploaderInfo = `Uploaded by: ${p.uploadedBy?.name || 'Unknown'} | Year: ${p.year} | Date: ${new Date(p.uploadedAt).toLocaleDateString()}`;
-        const separator = "─".repeat(80);
-        return `${separator}\n${uploaderInfo}\n${separator}\n\n${p.extractedText.trim()}`;
-      })
-      .join("\n\n");
-
-    // Create a combined paper object
+    // Create combined paper object with individual papers for inline display
     const combinedPaper = {
       subject: subjectGroup.subject,
       year: `${Math.min(
         ...subjectPapers.map((p) => parseInt(p.year))
       )} - ${Math.max(...subjectPapers.map((p) => parseInt(p.year)))}`,
-      extractedText: combinedText,
       combinedCount: subjectPapers.filter(
         (p) => p.extractedText && p.extractedText.trim()
       ).length,
       totalPapers: subjectPapers.length,
       availableYears: Array.from(subjectGroup.availableYears).sort(),
-      papersWithUploaders: subjectPapers.filter(
-        (p) => p.extractedText && p.extractedText.trim()
-      ).map(p => ({
-        uploadedBy: p.uploadedBy?.name || 'Unknown',
-        year: p.year,
-        uploadedAt: p.uploadedAt
-      }))
+      papersWithUploaders: subjectPapers
+        .filter((p) => p.extractedText && p.extractedText.trim())
+        .map((p) => ({
+          uploadedBy: p.uploadedBy?.name || "Unknown",
+          year: p.year,
+          uploadedAt: p.uploadedAt,
+        })),
+      // Store individual papers with their extracted text for inline display
+      individualPapersWithText: subjectPapers
+        .filter((p) => p.extractedText && p.extractedText.trim())
+        .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)),
     };
 
     setSelectedPaper(combinedPaper);
@@ -99,11 +92,14 @@ const MainDashboard = () => {
 
   const fetchSubjects = async (token) => {
     try {
-      const response = await fetch("https://questionai-backend.onrender.com/api/subjects", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "https://questionai-backend.onrender.com/api/subjects",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -159,30 +155,32 @@ const MainDashboard = () => {
     setShowChatModal(true);
   };
 
-// Replace your handleChatWithSubject function with this optimized version:
-const handleChatWithSubject = (subjectGroup) => {
-  // Prepare context with same order as handleViewDetails but lighter formatting
-  const subjectContext = subjectGroup.papers
-    .filter((p) => p.extractedText && p.extractedText.trim())
-    .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Same sorting as handleViewDetails
-    .map((p, index) => {
-      // Show upload date instead of just year
-      const uploadDate = new Date(p.uploadedAt).toLocaleDateString();
-      const paperInfo = `Paper ${index + 1} (${uploadDate} - ${p.uploadedBy?.name || 'Unknown'})`;
-      return `=== ${paperInfo} ===\n${p.extractedText.trim()}`;
-    })
-    .join("\n\n");
+  // Replace your handleChatWithSubject function with this optimized version:
+  const handleChatWithSubject = (subjectGroup) => {
+    // Prepare context with same order as handleViewDetails but lighter formatting
+    const subjectContext = subjectGroup.papers
+      .filter((p) => p.extractedText && p.extractedText.trim())
+      .sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)) // Same sorting as handleViewDetails
+      .map((p, index) => {
+        // Show upload date instead of just year
+        const uploadDate = new Date(p.uploadedAt).toLocaleDateString();
+        const paperInfo = `Paper ${index + 1} (${uploadDate} - ${
+          p.uploadedBy?.name || "Unknown"
+        })`;
+        return `=== ${paperInfo} ===\n${p.extractedText.trim()}`;
+      })
+      .join("\n\n");
 
-  const contextWithSubject = `Subject: ${subjectGroup.subject?.code} - ${subjectGroup.subject?.name}\n\n${subjectContext}`;
+    const contextWithSubject = `Subject: ${subjectGroup.subject?.code} - ${subjectGroup.subject?.name}\n\n${subjectContext}`;
 
-  handleChatWithAI(contextWithSubject);
-};
+    handleChatWithAI(contextWithSubject);
+  };
 
   // Group all papers by subject first - with null subject handling
   const allGroupedPapers = questionPapers.reduce((groups, paper) => {
     // Skip papers without subject data
     if (!paper.subject || !paper.subject._id) {
-      console.warn('Skipping paper without subject:', paper);
+      console.warn("Skipping paper without subject:", paper);
       return groups;
     }
 
@@ -215,6 +213,48 @@ const handleChatWithSubject = (subjectGroup) => {
     return groups;
   }, {});
 
+  // 1. Add this delete function after your existing functions (around line 200)
+  const handleDeletePaper = async (paperId, paperTitle) => {
+    if (!window.confirm(`Are you sure you want to delete`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `https://questionai-backend.onrender.com/api/question-papers/${paperId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setMessage({
+          type: "success",
+          text: "Question paper deleted successfully",
+        });
+        // Refresh the question papers list
+        fetchQuestionPapers(token);
+        // Close modal if it's open
+        if (showModal) {
+          handleCloseModal();
+        }
+      } else {
+        setMessage({
+          type: "error",
+          text: data.message || "Failed to delete question paper",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting question paper:", error);
+      setMessage({ type: "error", text: "Failed to delete question paper" });
+    }
+  };
   // Filter grouped subjects based on search and filters
   const filteredSubjects = Object.values(allGroupedPapers)
     .filter((group) => {
@@ -239,9 +279,10 @@ const handleChatWithSubject = (subjectGroup) => {
 
   // Get unique years for filter - with null check
   const availableYears = [
-    ...new Set(questionPapers
-      .filter(paper => paper.year) // Filter out papers without year
-      .map((paper) => paper.year)
+    ...new Set(
+      questionPapers
+        .filter((paper) => paper.year) // Filter out papers without year
+        .map((paper) => paper.year)
     ),
   ].sort((a, b) => b.localeCompare(a));
 
@@ -303,22 +344,6 @@ const handleChatWithSubject = (subjectGroup) => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Alert Messages */}
-        {message.text && (
-          <div
-            className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : message.type === "error"
-                ? "bg-red-50 text-red-700 border border-red-200"
-                : "bg-blue-50 text-blue-700 border border-blue-200"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium">{message.text}</span>
-          </div>
-        )}
-
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Upload File Card */}
@@ -368,6 +393,21 @@ const handleChatWithSubject = (subjectGroup) => {
               <span>Start AI Chat</span>
             </button>
           </div>
+          {/* Alert Messages */}
+          {message.text && (
+            <div
+              className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+                message.type === "success"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : message.type === "error"
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : "bg-blue-50 text-blue-700 border border-blue-200"
+              }`}
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">{message.text}</span>
+            </div>
+          )}
         </div>
 
         {/* Question Papers Section */}
@@ -540,12 +580,19 @@ const handleChatWithSubject = (subjectGroup) => {
                   )}
                 </div>
                 {/* Display contributor information */}
-                {selectedPaper.papersWithUploaders && selectedPaper.papersWithUploaders.length > 0 && (
-                  <div className="mt-2 text-sm text-blue-700">
-                    <span className="font-medium">Contributors: </span>
-                    {[...new Set(selectedPaper.papersWithUploaders.map(p => p.uploadedBy))].join(", ")}
-                  </div>
-                )}
+                {selectedPaper.papersWithUploaders &&
+                  selectedPaper.papersWithUploaders.length > 0 && (
+                    <div className="mt-2 text-sm text-blue-700">
+                      <span className="font-medium">Contributors: </span>
+                      {[
+                        ...new Set(
+                          selectedPaper.papersWithUploaders.map(
+                            (p) => p.uploadedBy
+                          )
+                        ),
+                      ].join(", ")}
+                    </div>
+                  )}
               </div>
               <button
                 onClick={handleCloseModal}
@@ -566,8 +613,10 @@ const handleChatWithSubject = (subjectGroup) => {
                 </svg>
               </button>
             </div>
+
             <div className="p-6 overflow-y-auto bg-blue-300 max-h-[70vh]">
-              {selectedPaper.extractedText ? (
+              {selectedPaper.individualPapersWithText &&
+              selectedPaper.individualPapersWithText.length > 0 ? (
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-medium text-gray-900">
@@ -581,43 +630,83 @@ const handleChatWithSubject = (subjectGroup) => {
                           All {selectedPaper.subject?.code} papers combined
                         </div>
                       )}
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            selectedPaper.extractedText
-                          );
-                        }}
-                        className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <span>Copy Text</span>
-                      </button>
                     </div>
                   </div>
-                  <div className="bg-gray-300 p-6 rounded-lg border border-gray-200 shadow-inner">
-                    <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
-                      {selectedPaper.extractedText}
-                    </pre>
+
+                  <div className="bg-gray-100 rounded-lg border border-gray-200 shadow-inner">
+                    {selectedPaper.individualPapersWithText.map(
+                      (paper, index) => (
+                        <div
+                          key={paper._id}
+                          className="border-b border-gray-400 last:border-b-0"
+                        >
+                          {/* Header with inline delete button */}
+                          <div className="bg-amber-200 p-4 flex items-center justify-between">
+                            <div className="text-md font-medium text-gray-800">
+                              <span>
+                                Uploaded by:{" "}
+                                {paper.uploadedBy?.name || "Unknown"}
+                              </span>
+                              <span className="mx-2">|</span>
+                              <span>Year: {paper.year}</span>
+                              <span className="mx-2">|</span>
+                              <span>
+                                Date:{" "}
+                                {new Date(
+                                  paper.uploadedAt
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Inline Delete Button - only show for user's own papers */}
+                            {user &&
+                              paper.uploadedBy &&
+                              paper.uploadedBy._id === user.id && (
+                                <button
+                                  onClick={() =>
+                                    handleDeletePaper(
+                                      paper._id,
+                                      `${selectedPaper.subject?.code} - ${paper.year}`
+                                    )
+                                  }
+                                  className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-md rounded-md transition-colors flex items-center space-x-1"
+                                  title="Delete this paper"
+                                >
+                                  <svg
+                                    className="w-3 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                  <span>Delete</span>
+                                </button>
+                              )}
+                          </div>
+                          {/* Paper content */}
+                          <div className="p-4">
+                            <pre className="whitespace-pre-wrap text-sm font-normal leading-relaxed">
+                              {paper.extractedText.trim()}
+                            </pre>
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
+
                   {selectedPaper.combinedCount > 1 && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-800">
-                        <strong>Note:</strong> This view combines extracted text
-                        from all available papers for{" "}
-                        {selectedPaper.subject?.code}. Each paper section shows the uploader's name, year, and upload date at the top, followed by divider lines for better
-                        readability.
+                        <strong>Note:</strong> Each paper section shows the
+                        uploader's name, year, and upload date. You can only
+                        delete papers uploaded by you using the delete button
+                        next to your uploaded papers.
                       </p>
                     </div>
                   )}

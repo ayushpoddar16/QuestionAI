@@ -777,24 +777,6 @@ const TextExtractor = () => {
               </div>
             </div>
             {/* --- END Save Extracted Text Form --- */}
-
-            {/* Messages (consolidated) */}
-            {message.text && (
-              <div
-                className={`mt-6 p-4 rounded-xl flex items-center gap-3 animate-fadeIn ${
-                  message.type === "success"
-                    ? "bg-green-100 text-green-700 border border-green-300"
-                    : "bg-red-100 text-red-700 border border-red-300"
-                }`}
-              >
-                {message.type === "success" ? (
-                  <CheckCircle className="w-6 h-6 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="w-6 h-6 flex-shrink-0" />
-                )}
-                <span className="font-medium text-base">{message.text}</span>
-              </div>
-            )}
           </div>
         )}
       </main>
