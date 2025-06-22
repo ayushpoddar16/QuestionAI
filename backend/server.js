@@ -721,6 +721,65 @@ app.get('/api/question-papers', authenticateToken, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch question papers' });
     }
 });
+// Delete question paper route - User can only delete their own uploads
+app.delete('/api/question-papers/:id', authenticateToken, async (req, res) => {
+    try {
+        const questionPaperId = req.params.id;
+        const userId = req.user.userId;
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(questionPaperId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid question paper ID format' 
+            });
+        }
+
+        // Find the question paper
+        const questionPaper = await QuestionPaper.findById(questionPaperId);
+        
+        if (!questionPaper) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Question paper not found' 
+            });
+        }
+
+        // Check if the user is the owner of the question paper
+        if (questionPaper.uploadedBy.toString() !== userId.toString()) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'You can only delete question papers uploaded by you' 
+            });
+        }
+
+        // Delete the question paper from database
+        await QuestionPaper.findByIdAndDelete(questionPaperId);
+
+        console.log(`Question paper deleted successfully by user ${userId}: ${questionPaperId}`);
+
+        res.json({
+            success: true,
+            message: 'Question paper deleted successfully',
+            deletedPaper: {
+                id: questionPaper._id,
+                subject: questionPaper.subject,
+                branch: questionPaper.branch,
+                semester: questionPaper.semester,
+                year: questionPaper.year,
+                uploadedAt: questionPaper.uploadedAt
+            }
+        });
+
+    } catch (error) {
+        console.error('Delete question paper error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to delete question paper', 
+            error: error.message 
+        });
+    }
+});
 
 // --- CHAT WITH AI ROUTE ---
 app.post('/api/chat/ask', async (req, res) => {
