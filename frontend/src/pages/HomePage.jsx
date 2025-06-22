@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Brain,
-  Users,
+  User,
   FileText,
   Award,
   ArrowRight,
@@ -84,12 +84,13 @@ const HomePage = () => {
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
-                  <span className="text-gray-700">
-                    Welcome, {user?.name || "User"}
-                  </span>
+                <div className="flex items-center space-x-2 text-md text-gray-600">
+                <User className="w-4 h-4" />
+                <span>{user?.name}</span>
+              </div>
                   <button
                     onClick={() => (window.location.href = "/dashboard")}
-                    className="px-3 py-2 rounded-md text-md bg-gray-200 font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                    className="px-3 py-2 rounded-md text-md bg-gray-300 font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-400 transition-colors"
                   >
                     Back to Dashboard
                   </button>
@@ -101,7 +102,7 @@ const HomePage = () => {
                       setUser(null);
                       window.location.reload();
                     }}
-                    className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2 rounded-lg font-medium hover:from-red-700 hover:to-red-800 transition-all duration-200 transform hover:scale-105"
+                    className="bg-gradient-to-r from-red-500 to-red-500 text-white px-6 py-2 rounded-lg font-medium hover:from-red-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105"
                   >
                     Logout
                   </button>

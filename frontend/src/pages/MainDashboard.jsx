@@ -323,7 +323,7 @@ const MainDashboard = () => {
               {/* New Back to Home Button (without icon) */}
               <button
                 onClick={() => (window.location.href = "/")}
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                className="px-3 py-2 rounded-md bg-gray-300 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-400 transition-colors"
               >
                 Back to Home
               </button>

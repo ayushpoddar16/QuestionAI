@@ -600,8 +600,6 @@ const TextExtractor = () => {
                 Extracted Text
               </h3>
               <div className="flex gap-3">
-
-
                 {/* Edit button */}
                 {!isEditing && (
                   <button
@@ -615,7 +613,8 @@ const TextExtractor = () => {
 
                 <button
                   onClick={copyToClipboard}
-                  className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
+                  disabled={isEditing}
+                  className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Copy className="w-4 h-4" />
                   Copy
@@ -623,7 +622,8 @@ const TextExtractor = () => {
 
                 <button
                   onClick={downloadText}
-                  className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
+                  disabled={isEditing}
+                  className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4" />
                   Download
@@ -632,7 +632,8 @@ const TextExtractor = () => {
                 {/* NEW: Cancel button - shows first */}
                 <button
                   onClick={cancelExtractedText}
-                  className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base"
+                  disabled={isEditing}
+                  className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X className="w-4 h-4" />
                   Cancel
