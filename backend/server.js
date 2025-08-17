@@ -425,7 +425,7 @@ app.get('/api/subjects', authenticateToken, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch subjects' });
     }
 });
-
+// to add subject in mongodb
 app.post('/api/subjects', authenticateToken, async (req, res) => {
     try {
         const { name, code, branch, semester, credits } = req.body;
