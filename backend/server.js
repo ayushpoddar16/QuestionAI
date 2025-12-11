@@ -10,7 +10,7 @@ const path = require('path');
 const axios = require('axios');
 const pdfParse = require('pdf-parse');
 require('dotenv').config();
-
+// check
 const app = express();
 const PORT = process.env.PORT || 5000;
 // CORS configuration - Add this before other middleware
@@ -32,7 +32,6 @@ const corsOptions = {
     'Origin'
   ]
 };
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
